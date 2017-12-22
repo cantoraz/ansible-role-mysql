@@ -1,0 +1,110 @@
+#BEGIN CONFIG INFO
+#DESCR: >=1GB RAM, InnoDB and MyISAM, ACID, few connections, heavy queries
+#TYPE: SYSTEM
+#END CONFIG INFO
+
+# This is a MySQL config file for systems with more than 1GB of memory
+# where MySQL is used together with other databases (such as MongoDB)
+# using InnoDB and MyISAM and performing complex queries
+# with few connections.
+#
+# Based on example config `my-huge.cnf', 
+# and referenced to `my-innodb-heavy-4G.cnf'.
+
+#
+# The MySQL server
+#
+[mysqld]
+
+#
+# * Basic Settings
+#
+skip-external-locking # default ON
+slow_query_log # default OFF
+long_query_time = 5 # default 10
+
+#
+# * Fine Tuning
+#
+back_log = 20 # default 50
+
+max_connections = 100 # default 151
+max_connect_errors = 10 # default 10
+
+table_open_cache = 256 # default 400
+max_allowed_packet = 16M # default 16M
+binlog_cache_size = 1M # default 32K
+max_heap_table_size = 16M #default 16M
+
+read_buffer_size = 1M # default 128K
+read_rnd_buffer_size = 4M # default 256K
+
+sort_buffer_size = 2M # default 2M
+join_buffer_size = 2M # default 128K
+
+thread_cache_size = 8 # default 8
+#thread_concurrency = 2 # default 10
+
+query_cache_size = 16M # default 16M
+query_cache_limit = 1M # default 1M
+
+ft_min_word_len = 4 # default 4
+
+default-storage-engine = InnoDB # default InnoDB
+
+thread_stack = 192K # default 192K
+
+transaction_isolation = REPEATABLE-READ # default REPEATABLE-READ
+
+tmp_table_size = 16M # default 16M
+
+#
+# * MyISAM Specific options
+#
+key_buffer_size = 256M # default 16M
+bulk_insert_buffer_size = 16M # default 8M
+
+myisam_sort_buffer_size = 32M # default 8M
+myisam_max_sort_file_size = 1G # default 8E
+
+myisam_repair_threads = 1 # default 1
+
+myisam-recover-options # default BACKUP
+
+#
+# * INNODB Specific options
+#
+#innodb_additional_mem_pool_size = 8M # default 8M
+innodb_buffer_pool_size = 256M # default 128M
+innodb_data_file_path = ibdata1:10M:autoextend # default ibdata1:10M:autoextend
+
+innodb_write_io_threads = 4 # default 4
+innodb_read_io_threads = 4 # default 4
+
+innodb_thread_concurrency = 2 # default 0
+
+innodb_flush_log_at_trx_commit = 1 # default 1
+
+innodb_log_buffer_size = 8M # defualt 8M
+innodb_log_file_size = 64M # default 5M
+innodb_log_files_in_group = 2 # default 2
+
+innodb_max_dirty_pages_pct = 75 # default 75
+
+innodb_lock_wait_timeout = 60 # default 50
+
+[mysqldump]
+quick
+max_allowed_packet = 16M
+
+[mysql]
+no-auto-rehash
+
+[myisamchk]
+key_buffer_size = 128M
+sort_buffer_size = 128M
+read_buffer = 2M
+write_buffer = 2M
+
+[mysqlhotcopy]
+interactive-timeout

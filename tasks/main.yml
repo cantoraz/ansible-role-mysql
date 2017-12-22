@@ -1,0 +1,9 @@
+---
+# This playbook will install MySQL and create db user and give permissions.
+
+- include: setup.yml
+
+- include: configure.yml
+- include: secure.yml
+- include: databases.yml
+- include: users.yml

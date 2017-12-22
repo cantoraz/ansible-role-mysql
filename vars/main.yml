@@ -1,0 +1,4 @@
+---
+
+__mysql_daemon: mysql
+__mysql_default_datadir: /var/lib/mysql

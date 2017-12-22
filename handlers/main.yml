@@ -1,0 +1,7 @@
+---
+
+- name: reload systemd
+  systemd: name={{ __mysql_daemon }} daemon_reload=yes
+
+- name: restart mysql
+  service: name={{ __mysql_daemon }} state=restarted

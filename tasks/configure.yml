@@ -1,0 +1,69 @@
+---
+
+- name: Ensure recommended ulimit limits to be set in MySQL systemd unit
+  lineinfile:
+    path: /lib/systemd/system/mysql.service
+    insertafter: ^RuntimeDirectoryMode=.*
+    line: LimitNOFILE=64000
+    state: present
+  # register: mysql_systemd_unit
+  notify:
+    - reload systemd
+    - restart mysql
+
+# - name: Reload systemd daemon to load changed MySQL systemd unit
+#   systemd: name={{ __mysql_daemon }} daemon_reload=yes
+#   when: mysql_systemd_unit.changed
+
+- name: Configure MySQL default character set
+  copy:
+    src: conf.d/character_set.cnf
+    dest: /etc/mysql/conf.d/character_set.cnf
+  notify: restart mysql
+
+- name: Configure MySQL binding address
+  template:
+    src: mysql.conf.d/mysqld_bind_address.cnf.j2
+    dest: /etc/mysql/mysql.conf.d/mysqld_bind_address.cnf
+  notify: restart mysql
+
+- name: Configure datadir for initial installation
+  block:
+    # Once you change the mysql_datadir to other than the default /var/lib/mysql at
+    # initial installation, DO NOT change it later again.
+    - name: Configure MySQL data dir
+      template:
+        src: mysql.conf.d/mysqld_datadir.cnf.j2
+        dest: /etc/mysql/mysql.conf.d/mysqld_datadir.cnf
+      when: mysql_datadir != __mysql_default_datadir
+      notify: restart mysql
+
+    - name: Move default datadir to specified path if it does not exist
+      command: mv {{ __mysql_default_datadir }} {{ mysql_datadir }}
+      args:
+        creates: "{{ mysql_datadir }}"
+  when: not mysql_installed.stat.exists
+
+- name: Ensure datadir permissions in AppArmor policy
+  lineinfile:
+    path: /etc/apparmor.d/usr.sbin.mysqld
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    backrefs: yes
+  with_items:
+    - { regexp: "^\\s*/var/lib/mysql/ r,$",         line: "  /srv/mysql/ r," }
+    - { regexp: "^\\s*/var/lib/mysql/\\*\\* rwk,$", line: "  /srv/mysql/** rwk," }
+  register: mysql_apparmor_update_policy
+
+- name: Reload AppArmor service if policy was changed
+  service: name=apparmor state=reloaded
+  when: mysql_apparmor_update_policy.changed
+
+- name: Optimize MySQL
+  copy:
+    src: mysql.conf.d/optimized-{{ mysql_optimized_conf }}.cnf
+    dest: /etc/mysql/mysql.conf.d/optimized-{{ mysql_optimized_conf }}.cnf
+  notify: restart mysql
+
+- name: Ensure MySQL is started and enabled on boot
+  service: name={{ __mysql_daemon }} state=started enabled=yes
